@@ -48,7 +48,7 @@ def find_coor(level):
         return None, None
 
 
-def get_line_points(m):
+def get_line_points(m, w, h):
     x_top = m.shape[0]//2
     level_top = m[x_top, :]
     y_top_left, y_top_right = find_coor(level_top)
@@ -57,6 +57,11 @@ def get_line_points(m):
         return {
             "tracks": False,
         }
+    else:
+        y_top_left = int(y_top_left / 1024.0 * w)
+        y_top_right = int(y_top_right / 1024.0 * w)
+        x_top = int(x_top / 512.0 * h)
+        
 
     x_bottom = int(2*m.shape[0]//3)
     level_bottom = m[x_bottom, :]
@@ -66,7 +71,10 @@ def get_line_points(m):
         return {
             "tracks": False,
         }
-
+    else:
+        y_bottom_left = int(y_bottom_left / 1024.0 * w)
+        y_bottom_right = int(y_bottom_right / 1024.0 * w)
+        x_bottom = int(x_bottom / 512.0 * h)
     # return {
     #     "left": [
     #         (x_bottom, y_bottom_left),
@@ -95,7 +103,8 @@ def interface(image, return_overlay=False):
     snapshot = "bisenetv2_checkpoint_BiSeNetV2_epoch_300.pth"
     segmentation_handler = RailtrackSegmentationHandler(snapshot, BiSeNetV2Config())
     mask, overlay = segmentation_handler.run(image, only_mask=False)
-    data = get_line_points(mask)
+    h,w,c = overlay.shape
+    data = get_line_points(mask, w, h)
     _processing_time = datetime.datetime.now() - start
 
     print("processing time one frame {}[ms]".format(_processing_time.total_seconds() * 1000))
@@ -109,6 +118,8 @@ def interface(image, return_overlay=False):
 def image2image(image):
 
     data, overlay = interface(image, return_overlay=True)
+
+    print(data)
 
     if data['tracks']:
         cv2.circle(overlay, data['left'][0], 5, (255, 0, 255), 3)

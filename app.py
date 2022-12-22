@@ -23,11 +23,18 @@ def detect_get():
 def detect_post():
     image = request.files["image"]
 
-    path = "uploads/" + with_random_prefix(image.filename)
+    tmp_path = with_random_prefix(image.filename)
+    path = "uploads/" + tmp_path
     image.save(path)
 
     img = cv.imread(path)
     points = interface(img)
+
+    img_out = image2image(img)
+
+    path_out = "static/" + tmp_path
+    cv.imwrite(path_out, img_out)
+
     print(points)
 
     return {
